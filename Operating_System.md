@@ -209,15 +209,65 @@
 
 ## 6. 프로세스 동기화
 
-## 7. Critical Section
+동시에 실행되는 프로세스(스레드)들의 공유 자원에 대해 `Data Inconsistency` 문제가 발생할 수 있다.
 
-## 8. 해결책
+### Critical Section(임계 영역)
 
-## 9. Lock
+- 각 프로세스(스레드)가 공유자원을 건드리므로, 원자성이 확보되어야 하는 영역이다.
+- 원자성이 확보되지 않는다면, 공유자원을 사용하는 도중에 다른 프로세스(스레드)가 끼어들어 원하지 않는 결과를 초래할 수 있다.
 
-## 10. Semaphores
+### Requirements(해결을 위한 기본조건)
 
-## 11. 모니터
+- Mutual Exclusion(상호 배제)
+
+  프로세스 P1 이 Critical Section 에서 실행중이라면, 다른 프로세스들은 그들이 가진 Critical Section 에서 실행될 수 없다.
+
+- Progress(진행)
+
+  Critical Section 에서 실행중인 프로세스가 없고, 별도의 동작이 없는 프로세스들만 Critical Section 진입 후보로서 참여될 수 있다. (데드락 방지)
+
+- Bounded Waiting(한정된 대기)
+
+  P1 가 Critical Section 에 진입 신청 후 부터 받아들여질 때가지, 다른 프로세스들이 Critical Section 에 진입하는 횟수는 제한이 있어야 한다. ()
+
+> DeadLock
+
+자원(CPU)이 놀고 있는데, 아무도 자원을 할당 못받는 상황
+
+> Starvation
+
+프로세스(스레드)가 자원을 할당받지 못하는 상황
+
+### 해결책
+
+#### 1. Mutex Lock
+
+- `Entry Section`에서 Lock을 획득한 뒤 `Critical Section`에 진입
+- `Critical Section`의 작업을 모두 끝낸 뒤 `Exit Section` 진입하며 Lock 반환
+
+#### 2. Semaphores
+
+#### 3. 모니터
+
+### Peterson's Algorithm
+
+임계 영역에 진입할 수 있을 때까지 대기(Lock을 획득할 수 있을 때까지). 자신의 차례가 오면 임계 영역에 진입해서 작업을 한 뒤, 작업이 끝나면 다음 순번에게 락을 전달해준다.
+
+- 문제점 : 진입 영역(Entry Section)에서 원자성이 확보되어야 한다.
+- 논리적 해결책뿐 아니라, 하드웨어적 해결책도 필요하다.
+
+#### `TestAndSet`
+
+- Lock을 획득할 수 있는지 확인(진입 영역).
+- 해당 연산은 원자적임.
+- Java에서는 Atomic 변수를 활용할 수 있음.
+
+#### `CompareAndSwap`
+
+- 기존 값, 새로운 값과 더불어 예측 값이 필요함
+- 기존 값이 예측 값과 같다면(Compare) 새로운 값으로 Swap
+- 다르다면 해당 작업을 재수행함.
+- 이걸 활용해서 위 설명한 Atomic 변수의 원자성을 확보해줄 수 있음.
 
 ## 12. 메모리 관리 전략
 
