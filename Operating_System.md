@@ -242,12 +242,63 @@
 
 #### 1. Mutex Lock
 
+상호 배제를 구현하는 알고리즘.
+
+- Critical Section을 보호.
 - `Entry Section`에서 Lock을 획득한 뒤 `Critical Section`에 진입
 - `Critical Section`의 작업을 모두 끝낸 뒤 `Exit Section` 진입하며 Lock 반환
+- 두 메서드 (`acquire()`, `release()`)와 lock의 가용성을 나타내는 `available` 변수 구현이 필요.
+- `Spin Lock`의 방식.
+  - `Busy Wait`하는 lock, lock 대기하는 동안 공회전(spin)
+  - lock의 획득까지 자원을 계속 소모하는 문제 발생.
+  - CPU Core가 여러 개인 `Multi Core`에서 효율적일 수 있음 (어차피 노는 Core니까)
+  - `Context Switch` 시간이 길 때 효과적. (계속 대기 중이라서)
+- `Blocking`의 방식
+  - lock을 획득하지 못하면 대기하러 감.(`wait()`)
+  - 이후 임계 영역의 작업을 모두 완료한 프로세스가 대기 중인 프로세스에게 알려줌.(`signal()`)
+  - `Spin Lock`과는 다르게, `Context Switch` 시간이 짧은 작업에 효과적.
+
+```c
+acquire() {
+  while (!available) {
+    // busy wait
+  }
+
+  available = false;
+}
+
+release() {
+  available = true;
+}
+```
 
 #### 2. Semaphores
 
+`Semaphore(신호기).` n개의 프로세스 간 동기화에 사용한다.
+
+- `semaphore S`는 가용 가능한 자원을 나타내는 정수 값이다.
+- 가용 가능한 자원이 없는 경우(S <= 0)는 대기한다.
+- 자원 가용 시에는 사용하고 (S--) 사용 후에는 반납한다. (S++)
+- 아래는 위 처럼 `Busy Wait`하는 코드이다. `Queue`를 활용해서, `wait()`, `signal()`로 사용하여 해결할 수 있다.
+- `S`는 `wait()`, `signal()`이라는 두 가지 원자적 연산으로만 접근이 가능하다.
+- `Semaphore`는 작업의 순서를 정해줄 때 사용할 수 있다.
+-
+
+```c
+wait(S) {
+  while (S <= 0)
+  ; // busy wait
+  S--;
+}
+
+signal(S) {
+  S++;
+}
+```
+
 #### 3. 모니터
+
+Mutex, Semaphore의 문제 해결. 최근 Java에서 사용하는 해결책. (`wait`, `notify`)
 
 ### Peterson's Algorithm
 
