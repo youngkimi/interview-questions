@@ -300,6 +300,61 @@ signal(S) {
 
 Mutex, Semaphore의 문제 해결. 최근 Java에서 사용하는 해결책. (`wait`, `notify`)
 
+- 발생하기 쉬운 에러를 방지할 수 있도록 추상화하여 프로그래머가 동기화를 덜 신경쓰게 함.
+  - 락을 획득하고 해제하지 않는다던가, `signal()`을 하지 않는다던가 ...
+- 프로그래머가 Mutex를 보장할 수 있게 정의한 연산들을 포함하는 ADT(Abstract Data Type)
+- `Mutex`, `Condition`로 구성.
+
+- `Mutex`:
+  - `Critical Section`에서의 Mutex 보장 장치. 진입을 위해서는 Lock을 취득해야 함.
+  - Lock을 획득하지 못하면 `wait()` 대기 상태로 빠짐. (`Entry Queue` 적재)
+  - Lock 반환 시에는 `Entry Queue` 내 프로세스 하나를 깨움. (`signal()`)
+- `Condition`
+  - 조건이 추가되기를 기다리는 스레드들이 대기 상태에서 기다리는 곳.
+  - `wait()` : 조건 미충족시, 자기 자신을 `Waiting Queue` 적재. Lock을 반환.
+  - `signal()` : `Waiting Queue` 내에서 대기 중인 스레드 하나를 깨움.
+  - `broadcast()` : `Waiting Queue` 내에서 대기 중인 스레드 전부를 깨움.
+
+```c
+// Lock을 획득.
+acquire(m);
+// 조건을 확인.
+while (!p) {
+  // 조건 충족이 안되면 Lock을 반환.
+  // cv가 관리하는 waiting queue에 자기 자신을 적재.
+  // 대기 상태로 전환.
+  wait(m, cv);
+}
+... // remainder section
+// 작업 이후 조건을 주변 스레드에 전파.
+// cv might be same with cv2
+signal(cv2); // broadcast(cv2);
+// 작업 이후 lock 반환.
+release(m);
+```
+
+두 개의 큐 (Queue)
+
+- `Entry Queue` : `Critical Section` 진입을 기다리는 스레드 큐.
+- `Waiting Queue` : `Condition Variable` 조건 충족을 기다리는 스레드 큐.
+
+`Signal` 이후 진행 방법
+
+- `SignalAndContinue` : `signal()` 이후 작업을 이어 나감. 조건 충족한 스레드는 `Entry Queue`로 이전.
+- `SignalAndWait` : `signal()` 해당 스레드가 `Entry Queue` 진입. 작업 가능한 스레드에게 락을 넘기고 작업.
+
+Java에서의 모니터
+
+- 자바에서는 모든 객체는 내부적으로 모니터를 가진다.
+- 모니터의 `Mutex`는 synchronized 키워드를 통해 사용한다.
+- 자바의 모니터는 `Condition Variable`을 하나만 가진다.
+- `wait()`, `notify()`, `notifyAll()`
+
+`synchronized`
+
+- `method`, 혹은 `block`에 사용할 수 있다.
+- `block`에 사용할 시, lock을 전달해줘야 한다.
+
 ### Peterson's Algorithm
 
 임계 영역에 진입할 수 있을 때까지 대기(Lock을 획득할 수 있을 때까지). 자신의 차례가 오면 임계 영역에 진입해서 작업을 한 뒤, 작업이 끝나면 다음 순번에게 락을 전달해준다.
